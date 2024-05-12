@@ -1,0 +1,11 @@
+{
+    "name": "canal-excavator-graphics",
+    "version": "0.0.2",
+    "title": "Canal Excavator Graphics",
+    "author": "Jurgy",
+    "factorio_version": "1.1",
+    "contact": "Jurgy or Jurgyy on most socials",
+    "homepage": "https://github.com/jurgyy/Factorio-Canal-Excavator-Graphics",
+    "description": "Graphics for the Canal Excavator mod",
+    "dependencies": ["base", "~ canal-excavator >= 0.0.2"]
+}

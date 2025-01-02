@@ -20,7 +20,7 @@ Path.dirToString = dirToString
 del(dirToString)
 # ----
 
-outputRoot = Path(os.getcwd()).joinpath("output/10/")
+outputRoot = Path(os.getcwd()).joinpath("output/13/")
 modRoot = Path(os.getcwd()).joinpath("..")
 mainAnimationStart = 1
 mainAnimationStop = 64
@@ -30,7 +30,6 @@ worldBackgroundStrength = 3.000
 
 resolutions = {
     "hr": 1080,
-    "lr": 540
 }
 
 startDirection=None#"West" 
@@ -114,6 +113,7 @@ def hideEverythingBut(objName = None, colName = None):
     hideCollection("Floor Dust")
     hideCollection("Main Render")
     hideCollection("Drop")
+    hideCollection("Rocks")
     hide(f"Shadow Catcher")
 
     if objName is not None:
@@ -251,6 +251,7 @@ def renderMachine():
     disableLights()
 
     hideEverythingBut(colName="Main Render")
+    # TODO for some reason it still shows the bucket content?
     setMainAnimationStartEndFrame()
 
     holdOutCollection(bpy.data.collections["Main Render"], value=False, unhide=True)
@@ -272,6 +273,7 @@ def renderHopperDust():
     
     hideEverythingBut(colName=["Hopper Dust", "Main Render", "Drop"])
     holdOutCollection(bpy.data.collections["Main Render"], value=True, unhide=True)
+    holdOutCollection(bpy.data.collections["Drop"], value=True, unhide=True)
     
     for direction in iterDirectionNames():
         setSceneDirection(direction)
@@ -359,9 +361,9 @@ def renderFloorDustAnimation(direction, resName, res):
     bpy.context.scene.sequence_editor_clear()
 
 def renderDrop():
-    # Drop currently part of Hopper Dust animation, so no need to render it seperately
-    hideEverythingBut(colName="Drop")
-    holdOutCollection("Main Render", value=True, unhide=True)
+    hideEverythingBut(colName=["Main Render", "Drop", "Rocks"])
+    holdOutCollection(bpy.data.collections["Main Render"], value=True, unhide=True)
+    holdOutCollection(bpy.data.collections["Rocks"], value=True, unhide=True)
 
     for direction in iterDirectionNames():
         setSceneDirection(direction)
@@ -369,6 +371,19 @@ def renderDrop():
             bpy.context.scene.render.resolution_x = res
             bpy.context.scene.render.resolution_y = res
             bpy.context.scene.render.filepath = outputRoot.joinpath(f"{name}/{direction}/Drop/").dirToString()
+            bpy.ops.render.render(animation=True)
+
+def renderRocks():
+    hideEverythingBut(colName=["Main Render", "Drop", "Rocks"])
+    holdOutCollection(bpy.data.collections["Main Render"], value=True, unhide=True)
+    holdOutCollection(bpy.data.collections["Drop"], value=True, unhide=True)
+
+    for direction in iterDirectionNames():
+        setSceneDirection(direction)
+        for name, res in resolutions.items():
+            bpy.context.scene.render.resolution_x = res
+            bpy.context.scene.render.resolution_y = res
+            bpy.context.scene.render.filepath = outputRoot.joinpath(f"{name}/{direction}/Rocks/").dirToString()
             bpy.ops.render.render(animation=True)
 
 def config_compositor(nodes, enable: bool):
@@ -412,15 +427,18 @@ def renderTech():
 
 
 def main():
-    # renderMachine()
-    # renderHopperDust()
-    # renderFloorDust()
+    print("Outputting to: " + str(outputRoot))
+    #renderMachine()
+    #renderHopperDust()
+    renderFloorDust()
+    #renderDrop()
+    #renderRocks()
     # renderShadows()
     # renderReflections()
     #renderMachineStills()
     #renderDrop()
     #renderIcon()
-    renderTech()
+    #renderTech()
 
 
 if __name__ == "__main__":

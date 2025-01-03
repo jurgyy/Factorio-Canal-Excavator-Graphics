@@ -251,7 +251,6 @@ def renderMachine():
     disableLights()
 
     hideEverythingBut(colName="Main Render")
-    # TODO for some reason it still shows the bucket content?
     setMainAnimationStartEndFrame()
 
     holdOutCollection(bpy.data.collections["Main Render"], value=False, unhide=True)

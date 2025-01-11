@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.2.0
+Date: 2025-01-11
+  Features:
+    - All rocks and dust are now grayscale and a separate layer so they can be colored by the resources is mined.
+    - Optimized images to use one third less memory
+---------------------------------------------------------------------------------------------------
 Version: 1.1.0
 Date: 2025-01-01
   Features:

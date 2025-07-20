@@ -9,6 +9,6 @@
   "description": "Graphics for the Canal Excavator mod.",
   "dependencies": [
     "base",
-    "~ canal-excavator >= 1.3.0"
+    "~ canal-excavator >= 1.3.6"
   ]
 }

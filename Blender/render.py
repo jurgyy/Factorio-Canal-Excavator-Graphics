@@ -423,15 +423,30 @@ def renderTech():
 
     config_compositor(compositorNodes, False)
 
-
+def renderSnow():
+    hideEverythingBut(colName=["Main Render", "Rocks", "Snow"])
+    holdOutCollection(bpy.data.collections["Main Render"], value=True, unhide=True)
+    holdOutCollection(bpy.data.collections["Rocks"], value=True, unhide=True)
+    
+    bpy.context.scene.frame_set(1)
+    
+    for direction in iterDirectionNames():
+        setSceneDirection(direction)
+        
+        for name, res in resolutions.items():
+            bpy.context.scene.render.resolution_x = res
+            bpy.context.scene.render.resolution_y = res
+            bpy.context.scene.render.filepath = str(outputRoot.joinpath(f"{name}/frozen/{direction}/frozen"))
+            bpy.ops.render.render(write_still=True)
 
 def main():
     print("Outputting to: " + str(outputRoot))
     #renderMachine()
     #renderHopperDust()
-    renderFloorDust()
+    #renderFloorDust()
     #renderDrop()
     #renderRocks()
+    renderSnow()
     # renderShadows()
     # renderReflections()
     #renderMachineStills()

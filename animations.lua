@@ -394,6 +394,42 @@ local function excavatorGrahpics()
         },
         rotate = false,
         orientation_to_variation = true
+      },
+      reset_animation_when_frozen = true,
+      frozen_patch =
+      { -- Frozen
+        north = {
+          filename = "__canal-excavator-graphics__/graphics/sprites/north/frozen.png",
+          line_length = 1,
+          width = 176,
+          height = 505,
+          shift = util.by_pixel(-12/2, -219.5/2),
+          scale = 0.5
+        },
+        east = {
+          filename = "__canal-excavator-graphics__/graphics/sprites/east/frozen.png",
+          line_length = 1,
+          width = 465,
+          height = 364,
+          shift = util.by_pixel(120.5/2, -116/2),
+          scale = 0.5
+        },
+        south = {
+          filename = "__canal-excavator-graphics__/graphics/sprites/south/frozen.png",
+          line_length = 1,
+          width = 176,
+          height = 400,
+          shift = util.by_pixel(0, 139/2),
+          scale = 0.5
+        },
+        west = {
+          filename = "__canal-excavator-graphics__/graphics/sprites/west/frozen.png",
+          line_length = 1,
+          width = 464,
+          height = 348,
+          shift = util.by_pixel(-121/2, -116/2),
+          scale = 0.5
+        }
       }
     }
 

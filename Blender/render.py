@@ -20,7 +20,7 @@ Path.dirToString = dirToString
 del(dirToString)
 # ----
 
-outputRoot = Path(os.getcwd()).joinpath("output/13/")
+outputRoot = Path(os.getcwd()).joinpath("output/15/")
 modRoot = Path(os.getcwd()).joinpath("..")
 mainAnimationStart = 1
 mainAnimationStop = 64
@@ -30,6 +30,13 @@ worldBackgroundStrength = 3.000
 
 resolutions = {
     "hr": 1080,
+}
+
+directionMap = {
+    "North": 1,
+    "East": 2,
+    "South": 3,
+    "West": 4
 }
 
 startDirection=None#"West" 
@@ -49,6 +56,9 @@ def hide(objName: str, value=True):
     bpy.data.objects[objName].hide_viewport = value
     
 def holdOutCollection(col: bpy.types.Collection, value=True, unhide=False):
+    if unhide:
+        hideCollection(col.name, False)
+
     for objName in iterAllObjectNames(col):
         bpy.data.objects[objName].is_holdout = value
         if unhide:
@@ -114,6 +124,9 @@ def hideEverythingBut(objName = None, colName = None):
     hideCollection("Main Render")
     hideCollection("Drop")
     hideCollection("Rocks")
+    hideCollection("Integration")
+    hideCollection("DestructionIntegration")
+    hideCollection("Destruction")
     hide(f"Shadow Catcher")
 
     if objName is not None:
@@ -254,6 +267,7 @@ def renderMachine():
     setMainAnimationStartEndFrame()
 
     holdOutCollection(bpy.data.collections["Main Render"], value=False, unhide=True)
+    holdOutCollection(bpy.data.collections["Integration"], value=True, unhide=True)
 
     for direction in iterDirectionNames():
         
@@ -265,6 +279,22 @@ def renderMachine():
             bpy.context.scene.render.filepath = outputRoot.joinpath(f"{name}/{direction}/Machine/").dirToString()
             bpy.ops.render.render(animation=True)
 
+def renderIntegration():
+    hideEverythingBut(colName=["Integration", "Main Render"])
+    
+    mainCollection = bpy.data.collections["Main Render"]
+    holdOutCollection(mainCollection, value=True, unhide=True)
+
+    bpy.context.scene.frame_set(1)
+    for direction in iterDirectionNames():
+        setSceneDirection(direction)
+        for name, res in resolutions.items():
+            bpy.context.scene.render.resolution_x = res
+            bpy.context.scene.render.resolution_y = res
+            bpy.context.scene.render.filepath = str(outputRoot.joinpath(f"{name}/{direction}/Integration/integration"))
+            bpy.ops.render.render(write_still=True)
+    
+    setCollectionRayVisibility(mainCollection, value=True)
 
 def renderHopperDust():
     disableLights()
@@ -439,14 +469,95 @@ def renderSnow():
             bpy.context.scene.render.filepath = str(outputRoot.joinpath(f"{name}/frozen/{direction}/frozen"))
             bpy.ops.render.render(write_still=True)
 
+def renderDestruction():
+    def get_output_path(direction: str, name: str, suffix: str = "") -> str:
+        return str(outputRoot.joinpath(f"{name}/destruct/tmp/{direction}" + suffix))
+    
+    def renderMain():
+        hideEverythingBut(colName=["Destruction"])
+        bpy.context.scene.frame_set(1)
+        for direction in iterDirectionNames():
+            setSceneDirection(direction)
+            for name, res in resolutions.items():
+                bpy.context.scene.render.resolution_x = res
+                bpy.context.scene.render.resolution_y = res
+                bpy.context.scene.render.filepath = get_output_path(direction, name)
+                bpy.ops.render.render(write_still=True)
+
+    def renderIntegration():
+        hideEverythingBut(colName=["Destruction", "DestructionIntegration"])
+        #holdOutCollection(bpy.data.collections["Destruction"], value=True, unhide=True)
+        
+        mainCollection = bpy.data.collections["Destruction"]
+        holdOutCollection(mainCollection, value=False, unhide=True)
+        setCollectionRayVisibility(mainCollection, value=False)
+
+        bpy.context.scene.frame_set(1)
+        for direction in iterDirectionNames():
+            setSceneDirection(direction)
+            for name, res in resolutions.items():
+                bpy.context.scene.render.resolution_x = res
+                bpy.context.scene.render.resolution_y = res
+                bpy.context.scene.render.filepath = get_output_path(direction, name, suffix="-integration")
+                bpy.ops.render.render(write_still=True)
+        
+        setCollectionRayVisibility(mainCollection, value=True)
+    
+    def renderShadow():
+        setCollectionRayVisibility(bpy.data.collections["Destruction"], False)
+        hideEverythingBut(objName="Shadow Catcher", colName=["Destruction"])
+        #hide(objName="Integration")
+        bpy.context.scene.frame_set(1)
+        
+        #bpy.context.scene.objects["Camera-East"].location.x *= -1
+
+        for direction in iterDirectionNames():
+            setSceneDirection(direction, strenght=0)
+            hide(f"Ground Shadow Light {direction}", False)
+            
+            for name, res in resolutions.items():
+                bpy.context.scene.render.resolution_x = res
+                bpy.context.scene.render.resolution_y = res
+                bpy.context.scene.render.filepath = get_output_path(direction, name, suffix="-shadow")
+                bpy.ops.render.render(write_still=True)
+            
+            hide(f"Ground Shadow Light {direction}", True)
+
+        #bpy.context.scene.objects["Camera-East"].location.x *= -1
+        hide(objName="Integration", value=False)
+        setCollectionRayVisibility(bpy.data.collections["Destruction"], True)
+    
+    renderMain()
+    renderIntegration()
+    renderShadow()
+
+    for direction in iterDirectionNames():
+        order = directionMap[direction]
+        for name, res in resolutions.items():
+            im_main = Image.open(get_output_path(direction, name) + ".png")
+            im_integration = Image.open(get_output_path(direction, name, suffix="-integration") + ".png")
+            im_shadow = Image.open(get_output_path(direction, name, suffix="-shadow") + ".png")
+
+            r, g, b, a = im_shadow.split()
+            a = a.point(lambda p: p * 0.5)
+            im_shadow = Image.merge("RGBA", (r, g, b, a))
+            im_shadow.save(get_output_path(direction, name, suffix="-shadow-alpha") + ".png")
+
+            combined = Image.alpha_composite(im_integration, im_shadow)
+            
+            combined = Image.alpha_composite(combined, im_main)
+            combined.save(str(outputRoot.joinpath(f"{name}/destruct/{order}-{direction}.png")))
+
 def main():
     print("Outputting to: " + str(outputRoot))
     #renderMachine()
+    renderIntegration()
     #renderHopperDust()
     #renderFloorDust()
     #renderDrop()
     #renderRocks()
-    renderSnow()
+    #renderSnow()
+    #renderDestruction()
     # renderShadows()
     # renderReflections()
     #renderMachineStills()
